@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--bootstrap-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <!--fontawesome-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+        integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script src="sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="sweetalert2.min.css">
+
+    <title>PQRS Alcaldia de Bucaramanga</title>
+</head>
+
+<body>
+    {% include 'navbar.html' %}
+
+    <div class="d-flex justify-content-center align-items-center mt-4 mb-4" style="min-height: 60vh;">
+        <div class="card">
+            <div class="card-header">
+                <h2>Sistema de pqrs de la alcaldia de Bucaramanga</h2>
+            </div>
+            <div class="card-body was-validated">
+                <div class="mb-3">
+                    <label for="nombres" class="form-label">Nombres</label>
+                    <input type="text" class="form-control is-invalid" id="nombres" aria-describedby="nombres"
+                        name="nombres" required onchange="validateData()">
+                </div>
+                <div class="mb-3">
+                    <label for="apellidos" class="form-label">Apellidos</label>
+                    <input type="text" class="form-control is-invalid" id="apellidos" aria-describedby="apellidos"
+                        name="apellidos" required onchange="validateData()">
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email de contacto</label>
+                    <input type="email" class="form-control is-invalid" id="email" aria-describedby="email" name="email"
+                        required onchange="validateData()">
+                </div>
+                <div class="mb-3">
+                    <label for="telfContacto" class="form-label">Número de contacto</label>
+                    <input type="text" class="form-control is-invalid" id="telfContacto" aria-describedby="telfContacto"
+                        name="telfContacto" required onchange="validateData()">
+                </div>
+                <div class="mb-3">
+                    <div class="form-floating">
+                        <textarea class="form-control is-invalid" placeholder="deja un comentario aqui" id="comentario"
+                            style="height: 100px" name="comentario" required onchange="validateData()"></textarea>
+                        <label for="comentario">Comentario</label>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="button-send" onclick="sendData()">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function validateData() {
+            const nombres = document.getElementById("nombres").value
+            const apellidos = document.getElementById("apellidos").value
+            const email = document.getElementById("email").value
+            const telefono = document.getElementById("telfContacto").value
+            const comentario = document.getElementById("comentario").value.trim()
+            const button = document.getElementById('button-send');
+            if ((nombres.length === 0) || (apellidos.length === 0) || (email.length === 0) || (telefono.length === 0) || (comentario.length === 0)) {
+                button.setAttribute('disabled', '');
+                return "notOk"
+            } else {
+                button.removeAttribute('disabled');
+                return "ok"
+            }
+        }
+        validateData()
+        async function sendData() {
+            const okOrNot = validateData()
+            if (okOrNot === "notOk") {
+                return Swal.fire(
+                    'Opps...',
+                    'Debes diligenciar todos los campos antes de continuar',
+                    'info'
+                )
+            }
+            const nombres = document.getElementById("nombres").value
+            const apellidos = document.getElementById("apellidos").value
+            const email = document.getElementById("email").value
+            const telefono = document.getElementById("telfContacto").value
+            const comentario = document.getElementById("comentario").value.trim()
+
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-primary ms-4 me-4',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+            })
+
+            const data = {
+                nombres,
+                apellidos,
+                email,
+                telefono,
+                comentario
+            }
+
+            const secondCheck = await swalWithBootstrapButtons.fire({
+                title: 'Está seguro de que quiere enviar la solicitud?',
+                html: 'Su solicitud será procesada se asignará a la dependencia adecuada',
+                showLoaderOnConfirm: true,
+                timerProgressBar: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: true,
+                showCancelButton: true,
+                confirmButtonText: 'Continuar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: async () => {
+                    const response = await fetch("http://localhost:5001/pqrs-process", {
+                        method: "POST",
+                        // mode: "cors",
+                        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+                        //credentials: "same-origin", // include, *same-origin, omit
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(data),
+                    });
+                    return response.json()
+                },
+            })
+            if (secondCheck.isConfirmed) {
+                const finalCheck = await swalWithBootstrapButtons.fire({
+                    icon: 'success',
+                    title: 'Solicitud procesada!',
+                    text: 'Su solicitud ha sido procesada y asignada a la dependencia correspondiente.'
+                })
+                if (finalCheck.isConfirmed) {
+                    window.location.reload();
+                }
+            } else {
+                swalWithBootstrapButtons.fire(
+                    'Cancelado',
+                    'Puedes modificar los datos ahora',
+                    'error'
+                )
+            }
+        }
+    </script>
+
+    {% include 'footer.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
