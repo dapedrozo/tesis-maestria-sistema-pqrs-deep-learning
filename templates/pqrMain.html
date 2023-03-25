@@ -29,28 +29,8 @@
             </div>
             <div class="card-body was-validated">
                 <div class="mb-3">
-                    <label for="nombres" class="form-label">Nombres</label>
-                    <input type="text" class="form-control is-invalid" id="nombres" aria-describedby="nombres"
-                        name="nombres" required onchange="validateData()">
-                </div>
-                <div class="mb-3">
-                    <label for="apellidos" class="form-label">Apellidos</label>
-                    <input type="text" class="form-control is-invalid" id="apellidos" aria-describedby="apellidos"
-                        name="apellidos" required onchange="validateData()">
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email de contacto</label>
-                    <input type="email" class="form-control is-invalid" id="email" aria-describedby="email" name="email"
-                        required onchange="validateData()">
-                </div>
-                <div class="mb-3">
-                    <label for="telfContacto" class="form-label">Número de contacto</label>
-                    <input type="text" class="form-control is-invalid" id="telfContacto" aria-describedby="telfContacto"
-                        name="telfContacto" required onchange="validateData()">
-                </div>
-                <div class="mb-3">
                     <div class="form-floating">
-                        <textarea class="form-control is-invalid" placeholder="deja un comentario aqui" id="comentario"
+                        <textarea class="form-control is-invalid" placeholder="deja un comentario de pqrs aqui" id="comentario"
                             style="height: 100px" name="comentario" required onchange="validateData()"></textarea>
                         <label for="comentario">Comentario</label>
                     </div>
@@ -62,13 +42,9 @@
 
     <script>
         function validateData() {
-            const nombres = document.getElementById("nombres").value
-            const apellidos = document.getElementById("apellidos").value
-            const email = document.getElementById("email").value
-            const telefono = document.getElementById("telfContacto").value
             const comentario = document.getElementById("comentario").value.trim()
             const button = document.getElementById('button-send');
-            if ((nombres.length === 0) || (apellidos.length === 0) || (email.length === 0) || (telefono.length === 0) || (comentario.length === 0)) {
+            if ((comentario.length === 0)) {
                 button.setAttribute('disabled', '');
                 return "notOk"
             } else {
@@ -86,10 +62,6 @@
                     'info'
                 )
             }
-            const nombres = document.getElementById("nombres").value
-            const apellidos = document.getElementById("apellidos").value
-            const email = document.getElementById("email").value
-            const telefono = document.getElementById("telfContacto").value
             const comentario = document.getElementById("comentario").value.trim()
 
             const swalWithBootstrapButtons = Swal.mixin({
@@ -103,16 +75,12 @@
             })
 
             const data = {
-                nombres,
-                apellidos,
-                email,
-                telefono,
                 comentario
             }
 
             const secondCheck = await swalWithBootstrapButtons.fire({
                 title: 'Está seguro de que quiere enviar la solicitud?',
-                html: 'Su solicitud será procesada se asignará a la dependencia adecuada',
+                html: 'Su solicitud será procesada y se recomendará a qué dependencia debe dirigirla',
                 showLoaderOnConfirm: true,
                 timerProgressBar: true,
                 allowOutsideClick: false,
@@ -135,11 +103,12 @@
                     return response.json()
                 },
             })
+            console.log(secondCheck)
             if (secondCheck.isConfirmed) {
                 const finalCheck = await swalWithBootstrapButtons.fire({
                     icon: 'success',
                     title: 'Solicitud procesada!',
-                    text: 'Su solicitud ha sido procesada y asignada a la dependencia correspondiente.'
+                    text: `Su solicitud ha sido procesada y se han obtenido los siguientes resultados: dependencia: ${secondCheck.value.dependencia} , porcentaje de seguridad del modelo: ${secondCheck.value.porcentaje} %`
                 })
                 if (finalCheck.isConfirmed) {
                     window.location.reload();

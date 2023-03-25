@@ -11,20 +11,17 @@ from sklearn.svm import SVC
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from joblib import dump, load
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.secret_key = 'f3167129525f2a20696b7de80ff37401c963b55871119ed7ddec510809d5fa5530fa40bdf5041484a52a3932a4cad6e542e3c5199ef4cca9aa7c7e52f69c3e76'
-
-with sqlite3.connect("pqrs.db") as con:
-  con.row_factory = sqlite3.Row
-  cur = con.cursor()
-  cur.execute("CREATE TABLE if not exists pqrs(id INTEGER PRIMARY KEY AUTOINCREMENT, nombres text NOT NULL, apellidos text NOT NULL, correo text NOT NULL, numerotlf text NOT NULL, mensaje text NOT NULL, clasificacion_deep_learning text, clasificacion_svm text)")
-  con.commit()
+CORS(app)
 
 @app.route('/', methods=['GET'])
 def Inicio():
   return render_template('pqrMain.html')
 
+"""
 @app.route('/consult-all', methods=['GET'])
 def GetAll():
   with sqlite3.connect("pqrs.db") as con:
@@ -34,6 +31,7 @@ def GetAll():
     res = res.fetchall()
     res=[dict(o) for o in res]
   return jsonify(res)
+"""
 
 @app.route('/pqrs-process', methods=['GET','POST'])
 def PqrsProcess():
@@ -42,10 +40,6 @@ def PqrsProcess():
   
   if request.method == 'POST':
     dataUser = request.json
-    nombres = dataUser['nombres']
-    apellidos = dataUser['apellidos']
-    email = dataUser['email']
-    telfContacto = dataUser['telefono']
     comment = dataUser['comentario']
     chk_path = os.path.join(os.getcwd(),"best-checkpoint.ckpt")
     model = MBartForConditionalGeneration.from_pretrained("facebook/mbart-large-50-many-to-one-mmt")
@@ -177,16 +171,9 @@ def PqrsProcess():
       rfc = load('random_forest_classifier.joblib')
       val_rfc = rfc.predict(tfidfVectorizer.transform([comment]))
     except:
-      val_rfc = max_val_secretaria
-    with sqlite3.connect("pqrs.db") as con:
-      cur = con.cursor()
-      cur.execute("""
-          INSERT INTO pqrs (nombres,apellidos,correo,numerotlf,mensaje,clasificacion_deep_learning, clasificacion_svm) VALUES
-              (?, ?, ?, ?, ?, ?, ?)
-      """, (nombres,apellidos,email,telfContacto,comment,max_val_secretaria,val_rfc))
-      con.commit()
-    resp = jsonify(success=True)
-    return resp
+      val_rfc = max_val_secretaria, max_val
+    max_val=max_val*100
+    return jsonify(dependencia=max_val_secretaria,porcentaje=(f"{max_val:.2f}"))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

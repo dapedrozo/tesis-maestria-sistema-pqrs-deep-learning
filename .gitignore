@@ -5,3 +5,4 @@ random_forest_classifier.joblib
 random_forest_classifier.zip
 support_vector_machine.joblib
 tfidf.joblib
+best-checkpoint.rar
